@@ -144,6 +144,19 @@ ngrok http 3000
 
 Set `ENABLE_DISCORD_BOT=false` only if you want webhooks + OAuth without the gateway (no `/link`, no rejoin sync).
 
+## Go-live
+
+See **[GO-LIVE.md](GO-LIVE.md)** for the full pre-launch checklist.
+
+After configuring `.env`, verify readiness:
+
+```bash
+npm run check    # validates env + guild config (no server start)
+npm run build
+npm start        # migrates DB, runs checks, starts app + bot
+curl https://YOUR_DOMAIN/health
+```
+
 ## Deploy notes
 
 - `APP_BASE_URL` must be your public HTTPS URL (Patreon webhooks require HTTPS).

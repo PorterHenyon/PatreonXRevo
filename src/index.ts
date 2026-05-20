@@ -2,18 +2,29 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { env } from "./config.js";
 import { getDb } from "./db/index.js";
-import { getTargetSyncGuildIds, listSyncGuilds } from "./db/queries.js";
+import { listSyncGuilds, getTargetSyncGuildIds } from "./db/queries.js";
 import authPatreon from "./routes/auth-patreon.js";
 import authDiscord from "./routes/auth-discord.js";
 import webhooksPatreon from "./routes/webhooks-patreon.js";
 import admin from "./routes/admin.js";
+import health from "./routes/health.js";
 import { startDiscordBot } from "./discord/bot.js";
+import { runStartupCheck, printStartupCheck } from "./startup-check.js";
 
 getDb();
 
+const startup = runStartupCheck();
+printStartupCheck(startup);
+const strictGoLive =
+  process.env.NODE_ENV === "production" ||
+  (!env.APP_BASE_URL.includes("localhost") && !env.APP_BASE_URL.includes("127.0.0.1"));
+if (!startup.ready && strictGoLive) {
+  process.exit(1);
+}
+
 const app = new Hono();
 
-app.get("/health", (c) => c.json({ ok: true }));
+app.route("/", health);
 
 app.get("/", (c) => {
   const guilds = listSyncGuilds();
@@ -55,8 +66,8 @@ app.route("/", webhooksPatreon);
 app.route("/", admin);
 
 const port = env.PORT;
-console.log(`PatreonXRevo listening on http://localhost:${port}`);
-console.log(`Sync guilds: ${getTargetSyncGuildIds().join(", ") || "(none — set PATREON_GUILD_ID + MAIN_GUILD_ID)"}`);
+console.log(`PatreonXRevo listening on ${env.APP_BASE_URL} (port ${port})`);
+console.log(`Sync guilds: ${getTargetSyncGuildIds().join(", ") || "(none)"}`);
 
 if (env.ENABLE_DISCORD_BOT) {
   startDiscordBot().catch((err) => {

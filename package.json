@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node dist/db/migrate.js && node dist/index.js",
+    "check": "tsx src/scripts/check-env.ts",
     "db:migrate": "tsx src/db/migrate.ts",
     "reconcile": "tsx src/jobs/reconcile.ts",
     "provision": "tsx src/jobs/provision.ts"
